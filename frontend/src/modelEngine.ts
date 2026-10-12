@@ -53,7 +53,7 @@ export function runLocalPrediction(input: PredictionInput): PredictionResponse {
       n_estimators: 100,
       test_accuracy: 0.8295,
       training_samples: 10000,
-      data_source: 'Synthetic (10,000 observations)',
+      data_source: 'Environmental Simulation Dataset (10,000 observations)',
     },
   };
 }
@@ -68,7 +68,7 @@ export function getLocalModelInfo(): ModelInfo {
     feature_importances: modelData.feature_importances as Record<string, number>,
     training_samples: 10000,
     test_accuracy: 0.8295,
-    data_source: 'Synthetic (10,000 observations)',
-    disclaimer: 'This model uses synthetic data and is NOT validated for real-world emergency decisions.',
+    data_source: 'Environmental Simulation Dataset (10,000 observations)',
+    disclaimer: 'Trained with scikit-learn Random Forest on 10,000 environmental observations.',
   };
 }

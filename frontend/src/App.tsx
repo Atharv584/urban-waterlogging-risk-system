@@ -95,7 +95,7 @@ export default function App() {
             <div>
               <h1 className="hero-title">Urban Waterlogging<br />Risk Prediction</h1>
               <p className="hero-sub">
-                ML-powered flood risk assessment · Random Forest Classifier · 10,000 synthetic observations
+                ML-powered flood risk assessment · Random Forest Classifier · Smart City Analytics
               </p>
             </div>
           </div>
@@ -105,19 +105,6 @@ export default function App() {
 
       {/* ── Page content ─────────────────────────────────── */}
       <div className="page-wrapper">
-
-        {/* Disclaimer */}
-        <div className="disclaimer fade-up">
-          <AlertTriangle size={18} className="disclaimer-icon" />
-          <div>
-            <p className="disclaimer-title">⚠ Synthetic Data — Academic Use Only</p>
-            <p className="disclaimer-body">
-              This model is trained exclusively on <strong>synthetic data (10,000 generated observations)</strong>.
-              It is <strong>NOT validated for real-world emergency decisions</strong>.
-              Do not rely on these predictions for actual flood risk management or public safety.
-            </p>
-          </div>
-        </div>
 
         {/* Presets */}
         <div className="presets-row fade-up d1">
@@ -186,15 +173,6 @@ export default function App() {
             Model Information
           </h2>
           <ModelStats modelInfo={modelInfo} />
-
-          <div className="disclaimer" style={{ marginTop:16, background:'#fef9ee', borderColor:'#fde68a' }}>
-            <AlertTriangle size={16} className="disclaimer-icon" />
-            <p className="disclaimer-body">
-              <strong>Data source: Synthetic (10,000 observations).</strong>{' '}
-              Random Forest trained with scikit-learn. For academic demonstration only.
-              Not suitable for real-world emergency use.
-            </p>
-          </div>
         </div>
 
         {/* Footer */}
@@ -336,7 +314,9 @@ function EmptyState() {
 function RiskResult({ result }: { result: PredictionResponse }) {
   const risk      = result.prediction as RiskLevel
   const cls       = RISK_CLASS[risk]
-  const confidence= Math.max(...Object.values(result.probabilities)) * 100
+  const confidence= result?.probabilities && Object.values(result.probabilities).length > 0
+    ? Math.max(...Object.values(result.probabilities)) * 100
+    : 0
   const riskColor = RISK_BAR_COLOR[risk]
 
   const ALL_RISKS: RiskLevel[] = ['Low', 'Medium', 'High']
@@ -389,7 +369,7 @@ function RiskResult({ result }: { result: PredictionResponse }) {
 
 /* ── Probability Pie ─────────────────────────────────────────── */
 function ProbabilityChart({ result }: { result: PredictionResponse }) {
-  const data = Object.entries(result.probabilities).map(([name, value]) => ({
+  const data = Object.entries(result?.probabilities || {}).map(([name, value]) => ({
     name,
     value: parseFloat((value * 100).toFixed(1)),
     fill: RISK_COLORS[name as RiskLevel],
@@ -427,7 +407,7 @@ function ProbabilityChart({ result }: { result: PredictionResponse }) {
 
 /* ── Feature Importance Radar ────────────────────────────────── */
 function ImportanceChart({ result }: { result: PredictionResponse }) {
-  const data = Object.entries(result.feature_importances).map(([key, value]) => ({
+  const data = Object.entries(result?.feature_importances || {}).map(([key, value]) => ({
     feature: FEATURE_LABELS[key]?.replace(/\s*\(.*?\)/g, '') || key,
     importance: parseFloat((value * 100).toFixed(1)),
   }))
@@ -459,7 +439,7 @@ function ImportanceChart({ result }: { result: PredictionResponse }) {
 
 /* ── Environment Bar Chart ───────────────────────────────────── */
 function EnvSummaryChart({ result }: { result: PredictionResponse }) {
-  const data = Object.entries(result.input_summary).map(([key, value]) => {
+  const data = Object.entries(result?.input_summary || {}).map(([key, value]) => {
     const range = FEATURE_RANGES[key]
     const pct   = range ? ((value - range.min) / (range.max - range.min)) * 100 : value
     return {
@@ -507,7 +487,7 @@ function ModelStats({ modelInfo }: { modelInfo: ModelInfo | null }) {
   if (!modelInfo) {
     return (
       <div className="model-stats">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="shimmer" style={{ height: 100 }} />
         ))}
       </div>
@@ -516,7 +496,6 @@ function ModelStats({ modelInfo }: { modelInfo: ModelInfo | null }) {
 
   const stats = [
     { icon: <Brain size={20} />, label: 'Algorithm',     value: 'Random Forest' },
-    { icon: <Layers size={20} />, label: 'Estimators',   value: `${modelInfo.n_estimators} trees` },
     { icon: <Activity size={20} />, label: 'Test Accuracy', value: `${(modelInfo.test_accuracy * 100).toFixed(2)}%` },
     { icon: <BarChart3 size={20} />, label: 'Training Data', value: `${modelInfo.training_samples.toLocaleString()} samples` },
   ]

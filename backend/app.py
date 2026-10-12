@@ -31,8 +31,21 @@ app.add_middleware(
 # Load model & features
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "waterlogging_model.pkl")
-FEATURES_PATH = os.path.join(BASE_DIR, "waterlogging_features.pkl")
+
+# Support both local (backend/) and Vercel (root/) model locations
+def _find_file(filename: str) -> str:
+    candidates = [
+        os.path.join(BASE_DIR, filename),                            # backend/
+        os.path.join(BASE_DIR, '..', filename),                      # root/
+        os.path.join(BASE_DIR, '..', 'backend', filename),           # root/backend/
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    raise FileNotFoundError(f"{filename} not found. Searched: {candidates}")
+
+MODEL_PATH    = _find_file("waterlogging_model.pkl")
+FEATURES_PATH = _find_file("waterlogging_features.pkl")
 
 with open(MODEL_PATH, "rb") as f:
     model = pickle.load(f)
